@@ -3,7 +3,6 @@
 # Compix - a script to grab and organize comic pictures 
 #
 
-
 # Includes
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -58,12 +57,9 @@ with progressbar.ProgressBar(max_value=len(images)) as bar:
 		# get the image source url (could set up more try-catches if not "src")
 		url_image = image["src"]
 
-		# get the image content
+		# get the image content and save files
 		r = requests.get(url_image).content
 		with open(f"page{page_count}.jpg", "wb+") as f:
 			f.write(r)
 		page_count+=1
-		#print(f"Successfuly saved {comic_series}, issue {str(issue)}, page {str(i)}") # update to progress bar
 		bar.update(i)
-		sleep(0.5)
-# filter out standard unwanted images from page
