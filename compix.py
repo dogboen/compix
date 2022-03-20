@@ -4,17 +4,14 @@
 #
 
 # Includes
-
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import warnings
-warnings.simplefilter("ignore")
-import wget
 import os 
 from bs4 import *
 import requests
 import progressbar
 from time import sleep
-
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import warnings
+warnings.simplefilter("ignore")
 
 
 # =Folder=
@@ -64,20 +61,36 @@ def download(images):
 # =Main=
 def main():
 
+	# Set up the download area 
 	folder(working_path)
 
+	# Process site data for image links
 	images = pageparse(url_whole)
 
 	print(f"Issue {str(issue)} found, Pages: {str(len(images))}")
 	sleep (1)
 
+	# Download the goods
 	download(images)
 
+
+
 # Set up variables like directory and link and args like full/singleissue
-	# update for arguments
+
+# Parse command line arguments
+parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+parser.add_argument("-s", "--series", default="the-amazing-spider-man-1963", help="Series title as it appears on viewcomics.me")
+parser.add_argument("-i", "--issue", default=1, type=int, help="Issue number")
+
+args = vars(parser.parse_args())
+
 url_base = 'https://viewcomics.me/'
-comic_series = input("Series name (i.e. the-boys): ")
-issue = input("Issue #: ")
+
+# Series name (i.e. the-boys)
+comic_series = args["series"]
+
+# Issue number 
+issue = args["issue"]
 
 url_whole = f"{url_base}{comic_series}/issue-{str(issue)}/full" 
 working_path = f"./download/{comic_series}/issue-{issue}"
