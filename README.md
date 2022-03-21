@@ -24,6 +24,8 @@ options:
 ### Examples
 Find the series on viewcomics first to ensure you have the right format (include year)
 
+*If using .exe version, just replace "py compix.py" with "compix.exe"*
+
 Example 1: Get Issue 3 of Morbius
 ```
 py compix.py morbius 3 
