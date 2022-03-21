@@ -10,20 +10,27 @@ pip install bs4 progressbar
 
 ### Usage
 ```
-usage: compix.py [-h] [-s SERIES] [-i ISSUE]
+usage: compix.py [-h] [-t] series issue
+
+positional arguments:
+  series                series title as it appears on viewcomics.me
+  issue                 (first) Issue number
 
 options:
   -h, --help            show this help message and exit
-  -s SERIES, --series SERIES
-                        Series title as it appears on viewcomics.me (default: the-amazing-spider-man-1963)
-  -i ISSUE, --issue ISSUE
-                        Issue number (default: 1)
+  -t, --toissue         to (last) issue number 
 ```
 
-### Grabbing multiple at once (Windows)
+### Examples
+Find the series on viewcomics first to ensure you have the right format (include year)
 
-The following example will download the first 3 issues of Morbius. 
-Define a range where (1,1,3) = (first, increment, last)
+Example 1: Get Issue 3 of Morbius
 ```
-for /l %c in (1,1,3); do py compix.py -s "morbius" -i %c
+py compix.py morbius 3 
 ```
+
+Example 2: Get issues 21-26 of Daredevil (2019)
+```
+py compix.py daredevil-2019 21 -t 26
+```
+
