@@ -26,7 +26,7 @@ def folder(working_path):
 # =PageParse=
 def pageparse(url_whole):
 
-	print(f"Grabbing images from: {url_whole}...")
+	print(f"\nGrabbing images from: {url_whole}...")
 	sleep(1)
 
 	# Parse the page for the image sources
@@ -61,41 +61,49 @@ def download(images):
 # =Main=
 def main():
 
-	# Set up the download area 
-	folder(working_path)
+	# Loop through all the issues
+	
+	if not to_issue: # Single issue case
+		last_issue = issue
+	else:
+		last_issue = to_issue
 
-	# Process site data for image links
-	images = pageparse(url_whole)
+	for i in range(issue,last_issue+1):
 
-	print(f"Issue {str(issue)} found, Pages: {str(len(images))}")
-	sleep (1)
+		# Set up the download area and set as working
+		folder(f"./download/{comic_series}/issue-{i}")
 
-	# Download the goods
-	download(images)
+		# Process site data for image links
+		images = pageparse(f"{url_base}{comic_series}/issue-{str(i)}/full" )
 
+		print(f"\nIssue {str(i)} found, Pages: {str(len(images))}")
+		sleep (1)
 
+		# Download the goods
+		download(images)
+
+		# Switch back to parent folder
+		os.chdir('../../..')
 
 # Set up variables like directory and link and args like full/singleissue
 
 # Parse command line arguments
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument("-s", "--series", default="the-amazing-spider-man-1963", help="Series title as it appears on viewcomics.me")
-parser.add_argument("-i", "--issue", default=1, type=int, help="Issue number")
+parser.add_argument("series", help="series title as it appears on viewcomics.me")
+parser.add_argument("issue", type=int, help="(first) Issue number")
+parser.add_argument("-t", "--toissue", default=0,type=int,help="to (last) issue number")
 
+# Assign base vars
 args = vars(parser.parse_args())
-
 url_base = 'https://viewcomics.me/'
-
-# Series name (i.e. the-boys)
 comic_series = args["series"]
-
-# Issue number 
 issue = args["issue"]
+to_issue = args["toissue"]
 
-url_whole = f"{url_base}{comic_series}/issue-{str(issue)}/full" 
-working_path = f"./download/{comic_series}/issue-{issue}"
 
 # Optional: bring in a whole text file to loop through 
+
+# Note: url format for whole series is url_base + "comic" + series
 
 # Main call
 main()
