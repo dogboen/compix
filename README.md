@@ -3,7 +3,7 @@
 
 ### Requirements
 
-requires the following additional packages to be installed: BeautifulSoup, ProgressBar
+Using the .py version requires the following additional packages to be installed: BeautifulSoup, ProgressBar
 ```
 pip install bs4 progressbar
 ```
