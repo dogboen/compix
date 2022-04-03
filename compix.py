@@ -2,14 +2,16 @@
 #
 # Compix - a script to grab and organize comic pictures 
 #
+# [] Series Link
+#  > [] Issue links
+#	  > [] Image Links
 
 # Includes
 import os 
 from bs4 import *
 import requests
 import progressbar
-from time import sleep
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
 import warnings
 warnings.simplefilter("ignore")
 
@@ -24,23 +26,44 @@ def folder(working_path):
 
 
 # =PageParse=
+# Gets the issue links from a series, or image set from issue page
 def pageparse(url_whole):
 
-	print(f"\nGrabbing images from: {url_whole}...")
-	sleep(1)
-
-	# Parse the page for the image sources
+	# Get and parse whole page
+	print(f"\nGrabbing data from: {url_whole}...")
 	reqs = requests.get(url_whole)
 	soup = BeautifulSoup(reqs.text, 'html.parser')
-	images = soup.findAll('img')
 
-	return images
+	# For fullset, we're on series page, so get all available issue links 
+	if '/comic/' in url_whole:
+		links=[]
+		data=soup.findAll('a',{"class":"ch-name"})
+		for i, a in enumerate(data):
+			testlink=data[i].get("href")
+			if 'issue-tpb' in testlink:
+				continue # Skip trade paperbacks
+			else:
+				links.insert(0,testlink)
+				
+		# Count and confirm w/ user
+		ans = input(f"\nSeries summary: {str(len(links))} issues found! Proceed to download? (y/n)")
+		if 'y' in ans:
+			return links
+		else:
+			print("\n=====Action canceled!=====\n")
+			return
+	
+	# For issue page, only pick out the image data 
+	else:
+		images = soup.findAll('img')
+		return images
 
 
 # =Download=
+# Gets the images from an issue link
 def download(images):
 	page_count=0
-	with progressbar.ProgressBar(max_value=len(images)) as bar:
+	with progressbar.ProgressBar(max_value=len(images)-3) as bar:
 		for i, image in enumerate(images):
 
 			# skip first, and last two images (site garbo)
@@ -61,23 +84,33 @@ def download(images):
 # =Main=
 def main():
 
-	# Loop through all the issues
+	# Process site data for issue links
 	
-	if not to_issue: # Single issue case
-		last_issue = issue
-	else:
-		last_issue = to_issue
+	if fullset:
+		# Get the full list of issue links
+		issuelinks = pageparse(f"{url_base}comic/{series}")
 
-	for i in range(issue,last_issue+1):
+	elif not to_issue: 
+		# Single issue link
+		issuelinks = [f"{url_base}{series}/issue-{issue}"]
+		
+	else:
+		# Custom issue range links
+		issuelinks = []
+		for i in range(issue,to_issue+1):
+			issuelinks.append(f"{url_base}{series}/issue-{i}")
+
+
+	# Process each issue link 
+
+	for i, link in enumerate(issuelinks):
 
 		# Set up the download area and set as working
-		folder(f"./download/{comic_series}/issue-{i}")
-
-		# Process site data for image links
-		images = pageparse(f"{url_base}{comic_series}/issue-{str(i)}/full" )
-
-		print(f"\nIssue {str(i)} found, Pages: {str(len(images))}")
-		sleep (1)
+		issue_str = link.rsplit('/',1)[1]
+		folder(f"./download/{series}/{issue_str}")
+		
+		# Parse the issue page for images
+		images = pageparse(f"{link}/full")
 
 		# Download the goods
 		download(images)
@@ -85,25 +118,26 @@ def main():
 		# Switch back to parent folder
 		os.chdir('../../..')
 
+
+
 # Set up variables like directory and link and args like full/singleissue
 
 # Parse command line arguments
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument("series", help="series title as it appears on viewcomics.me")
-parser.add_argument("issue", type=int, help="(first) Issue number")
-parser.add_argument("-t", "--toissue", default=0,type=int,help="to (last) issue number")
+parser.add_argument("-i", "--issue", type=int, help="(first) Issue number")
+parser.add_argument("-t", "--toissue", default=0,type=int, help="to (last) issue number")
+parser.add_argument("-f", "--full", action=BooleanOptionalAction, help="grab full set of issues")
 
 # Assign base vars
 args = vars(parser.parse_args())
 url_base = 'https://viewcomics.me/'
-comic_series = args["series"]
+series = args["series"]
 issue = args["issue"]
 to_issue = args["toissue"]
-
+fullset = args["full"]
 
 # Optional: bring in a whole text file to loop through 
-
-# Note: url format for whole series is url_base + "comic" + series
 
 # Main call
 main()

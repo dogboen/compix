@@ -1,3 +1,13 @@
 
 *.png
 *.jpg
+*.pyc
+*.toc
+*.zip
+*.pkg
+*.pyz
+*.exe
+*.manifest
+*.html
+*.txt
+*.spec
