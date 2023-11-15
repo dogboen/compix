@@ -45,3 +45,7 @@ Example 3: Get full set of Monstress
 py compix.py monstress -f
 ```
 
+11/2023 changelog:
+- updated to new domain
+- updates for progressbar
+- cleaned up site garbo image handling

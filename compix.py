@@ -56,30 +56,28 @@ def pageparse(url_whole):
 	# For issue page, only pick out the image data 
 	else:
 		images = soup.findAll('img')
-		return images
+		return images[1:len(images)-2] # dodge site garbo
 
 
 # =Download=
 # Gets the images from an issue link
 def download(images):
 	page_count=0
-	with progressbar.ProgressBar(max_value=len(images)-3) as bar:
-		for i, image in enumerate(images):
+	progress = progressbar.ProgressBar(maxval=len(images)).start()
+	for i, image in enumerate(images):
 
-			# skip first, and last two images (site garbo)
-			if i==0 or i==len(images)-2 or i==len(images)-1:
-				continue
+		# get the image source url (could set up more try-catches if not "src")
+		url_image = image["src"]
 
-			# get the image source url (could set up more try-catches if not "src")
-			url_image = image["src"]
+		# get the image content and save files
+		r = requests.get(url_image).content
+		with open(f"page{i+1}.jpg", "wb+") as f:
+			f.write(r)
 
-			# get the image content and save files
-			r = requests.get(url_image).content
-			with open(f"page{page_count}.jpg", "wb+") as f:
-				f.write(r)
-			page_count+=1
-			bar.update(i)
+		# update progressbar
+		progress.update()
 
+	progress.finish()
 
 # =Main=
 def main():
@@ -131,7 +129,7 @@ parser.add_argument("-f", "--full", action=BooleanOptionalAction, help="grab ful
 
 # Assign base vars
 args = vars(parser.parse_args())
-url_base = 'https://viewcomics.me/'
+url_base = 'https://viewcomics.org/'
 series = args["series"]
 issue = args["issue"]
 to_issue = args["toissue"]
