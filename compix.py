@@ -10,24 +10,24 @@
 import os 
 from bs4 import *
 import requests
-import progressbar
+from tqdm import tqdm
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
 import warnings
+import zipfile
+import pathlib
 warnings.simplefilter("ignore")
 
 
-# =Folder=
 def folder(working_path):
+	"""Create download folder and subfolder(s)"""
 
-	# Create download folder and subfolder(s)
 	if not os.path.exists(working_path):
 		os.makedirs(working_path)
 	os.chdir(working_path)
 
 
-# =PageParse=
-# Gets the issue links from a series, or image set from issue page
 def pageparse(url_whole):
+	"""Gets the issue links from a series, or image set from issue page"""
 
 	# Get and parse whole page
 	print(f"\nGrabbing data from: {url_whole}...")
@@ -59,14 +59,13 @@ def pageparse(url_whole):
 		return images[1:len(images)-2] # dodge site garbo
 
 
-# =Download=
-# Gets the images from an issue link
 def download(images):
-	page_count=0
-	progress = progressbar.ProgressBar(maxval=len(images)).start()
-	for i, image in enumerate(images):
+	"""Gets the images from an issue link"""
 
-		# get the image source url (could set up more try-catches if not "src")
+	# Progress bar
+	for i, image in tqdm(enumerate(images), total=len(images)):
+
+		# get the image source url
 		url_image = image["src"]
 
 		# get the image content and save files
@@ -74,33 +73,24 @@ def download(images):
 		with open(f"page{i+1}.jpg", "wb+") as f:
 			f.write(r)
 
-		# update progressbar
-		progress.update()
 
-	progress.finish()
-
-# =Main=
 def main():
+	"""Main Compix loop"""
 
 	# Process site data for issue links
-	
 	if fullset:
 		# Get the full list of issue links
 		issuelinks = pageparse(f"{url_base}comic/{series}")
-
 	elif not to_issue: 
 		# Single issue link
 		issuelinks = [f"{url_base}{series}/issue-{issue}"]
-		
 	else:
 		# Custom issue range links
 		issuelinks = []
 		for i in range(issue,to_issue+1):
 			issuelinks.append(f"{url_base}{series}/issue-{i}")
 
-
-	# Process each issue link 
-
+	# Process each issue link
 	for i, link in enumerate(issuelinks):
 
 		# Set up the download area and set as working
@@ -113,12 +103,18 @@ def main():
 		# Download the goods
 		download(images)
 
-		# Switch back to parent folder
-		os.chdir('../../..')
+		# Zip to cbz, switch back to parent folder
+		if zipping:
+			zipdir = pathlib.Path(issue_str)
+			os.chdir('..')
+			with zipfile.ZipFile(f'{issue_str}.cbz', 'w') as issue_cbz:
+				for page_file in zipdir.iterdir():
+					issue_cbz.write(page_file, arcname=page_file.name)
+			os.chdir('../..')
+			# delete images after?
+		else:
+			os.chdir('../../..')
 
-
-
-# Set up variables like directory and link and args like full/singleissue
 
 # Parse command line arguments
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -126,16 +122,19 @@ parser.add_argument("series", help="series title as it appears on viewcomics.me"
 parser.add_argument("-i", "--issue", type=int, help="(first) Issue number")
 parser.add_argument("-t", "--toissue", default=0,type=int, help="to (last) issue number")
 parser.add_argument("-f", "--full", action=BooleanOptionalAction, help="grab full set of issues")
+parser.add_argument("-z", "--zip", action=BooleanOptionalAction, help="zip issue to cbz")
 
-# Assign base vars
+# Assign global vars
 args = vars(parser.parse_args())
 url_base = 'https://viewcomics.org/'
 series = args["series"]
 issue = args["issue"]
 to_issue = args["toissue"]
 fullset = args["full"]
+zipping = args["zip"]
 
 # Optional: bring in a whole text file to loop through 
 
 # Main call
-main()
+if __name__ == "__main__":
+	main()

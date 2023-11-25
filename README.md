@@ -3,14 +3,14 @@
 
 ### Requirements
 
-Using the .py version requires the following additional packages to be installed: BeautifulSoup, ProgressBar
+Using the .py version requires the following additional packages to be installed: BeautifulSoup, tqdm
 ```
-pip install bs4 progressbar
+pip install bs4 tqdm
 ```
 
 ### Usage
 ```
-usage: compix.py [-h] [-i ISSUE] [-t TOISSUE] [-f | --full] series
+usage: compix.py [-h] [-i ISSUE] [-t TOISSUE] [-f | --full] [-z] series
 
 positional arguments:
   series                series title as it appears on viewcomics.me
@@ -23,6 +23,7 @@ options:
                         to (last) issue number (default: 0)
   -f, --full, --no-full
                         grab full set of issues (default: None)
+  -z, --zip             export issue(s) to .cbz
 ```
 
 ### Examples
@@ -47,5 +48,6 @@ py compix.py monstress -f
 
 11/2023 changelog:
 - updated to new domain
-- updates for progressbar
+- replaced progressbar with tqdm
 - cleaned up site garbo image handling
+- added exporting to cbz
