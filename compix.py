@@ -56,7 +56,7 @@ def pageparse(url_whole):
 	# For issue page, only pick out the image data 
 	else:
 		images = soup.findAll('img')
-		return images[1:len(images)-2] # dodge site garbo
+		return images[1:len(images)-1] # dodge site garbo
 
 
 def download(images):
