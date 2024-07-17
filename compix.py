@@ -40,10 +40,10 @@ def pageparse(url_whole):
 		data=soup.findAll('a',{"class":"ch-name"})
 		for i, a in enumerate(data):
 			testlink=data[i].get("href")
-			if 'issue-tpb' in testlink:
-				continue # Skip trade paperbacks
-			else:
-				links.insert(0,testlink)
+			# if 'issue-tpb' in testlink:
+			# 	continue # Skip trade paperbacks
+			# else:
+			links.insert(0,testlink)
 				
 		# Count and confirm w/ user
 		ans = input(f"\nSeries summary: {str(len(links))} issues found! Proceed to download? (y/n)")
@@ -80,8 +80,10 @@ def linkprocess(issuelinks):
 	for i, link in enumerate(issuelinks):
 
 		# Set up the download area and set as working
-		issue_str = link.rsplit('/', 1)[1]
-		folder(f"./download/{series}/{issue_str}")
+		link_str = link.rsplit('/', 2)
+		series = link_str[1]
+		issue_str = link_str[2]
+		folder(f"./download/{series}/{series}-{issue_str}")
 
 		# Parse the issue page for images
 		images = pageparse(f"{link}/full")
@@ -108,51 +110,47 @@ def main():
 	# Process site data for issue links
 	if interactive_mode:
 		print("=== INTERACTIVE MODE ===\n")
-		zipping = True
+		zipping = False
 		while interactive_mode:
-			issuelinks = [input("Issue link: ")]
-			if 'viewcomics' in issuelinks[0]:
-				issue_str = issuelinks[0].rsplit('/', 1)[0]
-				series = issue_str.removeprefix(url_base)
+			link = input("Series or issue link: ")
+			try:
+				issuelinks = pageparse(link)
 				linkprocess(issuelinks)
-			else:
+			except TypeError:
 				print("ok then, byebye now")
 				break
-	elif fullset:
-		# Get the full list of issue links
-		issuelinks = pageparse(f"{url_base}comic/{series}")
-		linkprocess(issuelinks)
-	elif not to_issue: 
-		# Single issue link
-		issuelinks = [f"{url_base}{series}/issue-{issue}"]
-		linkprocess(issuelinks)
-	else:
-		# Custom issue range links
-		issuelinks = []
-		for i in range(issue,to_issue+1):
-			issuelinks.append(f"{url_base}{series}/issue-{i}")
-		linkprocess(issuelinks)
-
-
+	# elif fullset:
+	# 	# Get the full list of issue links
+	# 	issuelinks = pageparse(f"{url_base}comic/{series}")
+	# 	linkprocess(issuelinks)
+	# elif not to_issue:
+	# 	# Single issue link
+	# 	issuelinks = [f"{url_base}{series}/issue-{issue}"]
+	# 	linkprocess(issuelinks)
+	# else:
+	# 	# Custom issue range links
+	# 	issuelinks = []
+	# 	issuelinks.append(f"{url_base}{series}/issue-{i}")
+	# 	linkprocess(issuelinks)
 
 
 # Parse command line arguments
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument("series", default="morbius", help="series title as it appears on viewcomics.me")
+parser.add_argument("series", default="morbius", help="series title as it appears on the site")
 parser.add_argument("-i", "--issue", type=int, help="(first) Issue number")
-parser.add_argument("-t", "--toissue", default=0,type=int, help="to (last) issue number")
+# parser.add_argument("-t", "--toissue", default=0,type=int, help="to (last) issue number")
 parser.add_argument("-f", "--full", action=BooleanOptionalAction, help="grab full set of issues")
-parser.add_argument("-z", "--zip", action=BooleanOptionalAction, help="zip issue to cbz")
+# parser.add_argument("-z", "--zip", action=BooleanOptionalAction, help="zip issue to cbz")
 parser.add_argument("interactive", default=False, help="interactive mode, fill in links infinitely")
 
 # Assign global vars
 args = vars(parser.parse_args())
-url_base = 'https://viewcomics.org/'
+url_base = 'https://azcomix.net/'
 series = args["series"]
 issue = args["issue"]
-to_issue = args["toissue"]
+# to_issue = args["toissue"]
 fullset = args["full"]
-zipping = args["zip"]
+# zipping = args["zip"]
 interactive_mode = args["interactive"]
 
 # Optional: bring in a whole text file to loop through 
