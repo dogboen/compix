@@ -113,12 +113,11 @@ def main():
 		zipping = False
 		while interactive_mode:
 			link = input("Series or issue link: ")
-			try:
+			if '/comic/' in link:
 				issuelinks = pageparse(link)
 				linkprocess(issuelinks)
-			except TypeError:
-				print("ok then, byebye now")
-				break
+			else:
+				linkprocess([link])
 	# elif fullset:
 	# 	# Get the full list of issue links
 	# 	issuelinks = pageparse(f"{url_base}comic/{series}")
