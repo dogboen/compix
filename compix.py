@@ -138,6 +138,7 @@ def main():
 			list_file = input("List file: ")
 			with open(list_file, "r") as f:
 				for link in f:
+					link = link.rsplit('\n', 1)[0]  # sniff out pesky \n's
 					if '/comic/' in link:
 						issuelinks = pageparse(link)
 						linkprocess(issuelinks)
