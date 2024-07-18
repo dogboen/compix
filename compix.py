@@ -46,12 +46,16 @@ def pageparse(url_whole):
 			links.insert(0,testlink)
 				
 		# Count and confirm w/ user
-		ans = input(f"\nSeries summary: {str(len(links))} issues found! Proceed to download? (y/n)")
-		if 'y' in ans:
-			return links
+		print(f"\nSeries summary: {str(len(links))} issues found")
+		if prompting:
+			ans = input("Proceed to download? (y/n)")
+			if 'y' in ans:
+				return links
+			else:
+				print("\n=====Action canceled!=====\n")
+				return
 		else:
-			print("\n=====Action canceled!=====\n")
-			return
+			return links
 	
 	# For issue page, only pick out the image data 
 	else:
@@ -82,8 +86,8 @@ def linkprocess(issuelinks):
 		# Set up the download area and set as working
 		link_str = link.rsplit('/', 2)
 		series = link_str[1]
-		issue_str = link_str[2]
-		folder(f"./download/{series}/{series}-{issue_str}")
+		issue_str = series+'-'+link_str[2]
+		folder(f"./download/{series}/{issue_str}")
 
 		# Parse the issue page for images
 		images = pageparse(f"{link}/full")
@@ -93,11 +97,15 @@ def linkprocess(issuelinks):
 
 		# Zip to cbz, switch back to parent folder
 		if zipping:
+			print(f"Zipping {issue_str} to cbz...")
 			zipdir = pathlib.Path(issue_str)
 			os.chdir('..')
 			with zipfile.ZipFile(f'{issue_str}.cbz', 'w') as issue_cbz:
-				for page_file in zipdir.iterdir():
+				for page_file in sorted(zipdir.iterdir()):
 					issue_cbz.write(page_file, arcname=page_file.name)
+			if os.path.getsize(issue_cbz.filename) < 100000:  # under 100kb - must be borked images
+				print(f"OOF - looks like {issue_str} is currently borked on the site...")
+				os.rename(issue_cbz.filename, issue_cbz.filename+"BROKEN")
 			os.chdir('../..')
 		# delete images after?
 		else:
@@ -106,18 +114,38 @@ def linkprocess(issuelinks):
 
 def main():
 	"""Main Compix loop"""
-	global series, zipping
+	global zipping, prompting
+	mode = int(input("= COMPIX = \n1. Interactive mode\n2. File list input mode\nSelect mode: "))
+	prompting = input("Prompts before downloading series? (y/n): ")
+	prompting = True if 'y' in prompting else False
 	# Process site data for issue links
-	if interactive_mode:
-		print("=== INTERACTIVE MODE ===\n")
-		zipping = False
-		while interactive_mode:
-			link = input("Series or issue link: ")
-			if '/comic/' in link:
-				issuelinks = pageparse(link)
-				linkprocess(issuelinks)
-			else:
-				linkprocess([link])
+	match mode:
+		case 1:
+			interactive_mode = True
+			print("=== INTERACTIVE MODE ===\n")
+			while interactive_mode:
+				link = input("Series or issue link: ")
+				if '/comic/' in link:
+					issuelinks = pageparse(link)
+					linkprocess(issuelinks)
+				elif 'issue' in link:
+					linkprocess([link])
+				else:
+					print("bye bye")
+					interactive_mode = False
+		case 2:
+			print("=== FILE LIST MODE === \n")
+			list_file = input("List file: ")
+			with open(list_file, "r") as f:
+				for link in f:
+					if '/comic/' in link:
+						issuelinks = pageparse(link)
+						linkprocess(issuelinks)
+					else:
+						linkprocess([link])
+		case _:
+			print("bye bye")
+
 	# elif fullset:
 	# 	# Get the full list of issue links
 	# 	issuelinks = pageparse(f"{url_base}comic/{series}")
@@ -135,24 +163,23 @@ def main():
 
 # Parse command line arguments
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument("series", default="morbius", help="series title as it appears on the site")
+# parser.add_argument("series", default="morbius", help="series title as it appears on the site")
 parser.add_argument("-i", "--issue", type=int, help="(first) Issue number")
 # parser.add_argument("-t", "--toissue", default=0,type=int, help="to (last) issue number")
 parser.add_argument("-f", "--full", action=BooleanOptionalAction, help="grab full set of issues")
 # parser.add_argument("-z", "--zip", action=BooleanOptionalAction, help="zip issue to cbz")
-parser.add_argument("interactive", default=False, help="interactive mode, fill in links infinitely")
+# parser.add_argument("interactive", default=False, help="interactive mode, fill in links infinitely")
 
 # Assign global vars
 args = vars(parser.parse_args())
 url_base = 'https://azcomix.net/'
-series = args["series"]
+# series = args["series"]
 issue = args["issue"]
 # to_issue = args["toissue"]
 fullset = args["full"]
-# zipping = args["zip"]
-interactive_mode = args["interactive"]
-
-# Optional: bring in a whole text file to loop through 
+zipping = True #args["zip"]
+prompting = True
+# interactive_mode = args["interactive"]
 
 # Main call
 if __name__ == "__main__":
