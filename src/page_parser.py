@@ -2,32 +2,39 @@ from bs4 import BeautifulSoup
 import requests
 
 
-def pageparse(url_whole):
-    """Gets the issue links from a series, or image set from issue page"""
+class PageParser(BeautifulSoup):
 
-    # Get and parse whole page
-    print(f"\nGrabbing data from: {url_whole}...")
-    reqs = requests.get(url_whole)
-    soup = BeautifulSoup(reqs.text, 'html.parser')
+    BASE_URL = 'https://azcomix.net/'
 
-    # For fullset, we're on series page, so get all available issue links
-    if '/comic/' in url_whole:
-        links =[]
-        data =soup.findAll('a', {"class": "ch-name"})
-        for i, a in enumerate(data):
-            testlink =data[i].get("href")
-
-            links.insert(0, testlink)
-
-        # Count and confirm w/ user
-        ans = input(f"\nSeries summary: {str(len(links))} issues found! Proceed to download? (y/n)")
-        if 'y' in ans:
-            return links
+    def __init__(self, url):
+        self.url = url
+        if self.BASE_URL not in self.url:
+            raise SyntaxError("This is not a comic link as expected")
         else:
-            print("\n=====Action canceled!=====\n")
-            return
+            self.reqs = requests.get(self.url)
+            super().__init__(self.reqs.text, 'html.parser')
 
-    # For issue page, only pick out the image data
-    else:
-        images = soup.findAll('img')
-        return images[1:len(images ) -1] # dodge site garbo
+    def page_parse(self, url_whole):
+        """Gets the issue links from a series"""
+
+        if '/comic/' in url_whole:
+            links = []
+            data = self.findAll('a', {"class": "ch-name"})
+            for i, a in enumerate(data):
+                testlink = data[i].get("href")
+                links.insert(0, testlink)
+
+            ans = ('y' in input(f"\nSeries summary: {len(links)} issues found! Proceed to download? (y/n): "))
+            if ans:
+                return links
+            else:
+                print("\n=== Download canceled! ===")
+                return []
+        else:
+            return [url_whole]
+
+    def issue_parse(self, url_issue):
+        """Pick out the image data from issue page"""
+        self.__init__(f"{url_issue}/full")
+        images = self.findAll('img')
+        return images[1:len(images) - 2]  # skip site garbage images
