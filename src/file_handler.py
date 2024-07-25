@@ -27,7 +27,8 @@ class FileHandler:
 		for i, image in tqdm(enumerate(images), total=len(images)):
 			url_image = image["src"]
 			r = requests.get(url_image).content
-			with open(f"page{i+1}.jpg", "wb+") as f:
+			pagename = "page" + str(i+1).zfill(3) + ".jpg"
+			with open(pagename, "wb+") as f:
 				f.write(r)
 
 		if zipping:
