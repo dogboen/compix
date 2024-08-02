@@ -25,7 +25,7 @@ class FileHandler:
 		"""Gets the images from an issue link"""
 
 		for i, image in tqdm(enumerate(images), total=len(images)):
-			url_image = image["src"]
+			url_image = image["src"].replace(" ", "")
 			r = requests.get(url_image).content
 			pagename = "page" + str(i+1).zfill(3) + ".jpg"
 			with open(pagename, "wb+") as f:

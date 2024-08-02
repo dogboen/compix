@@ -4,7 +4,7 @@ import requests
 
 class PageParser(BeautifulSoup):
 
-    BASE_URL = 'https://azcomix.net/'
+    BASE_URL = 'https://azcomix.me/'
 
     def __init__(self, url):
         self.url = url
